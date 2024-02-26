@@ -1,4 +1,5 @@
-import { h, cloneElement, render, hydrate } from 'preact';
+/* eslint-disable indent */
+import { cloneElement, h, hydrate, render } from 'preact';
 
 /**
  * @typedef {import('preact').FunctionComponent<any> | import('preact').ComponentClass<any> | import('preact').FunctionalComponent<any> } ComponentDefinition
@@ -219,7 +220,20 @@ function toVdom(element, nodeName) {
 		}
 	}
 
+	const childWrapper = children?.find((child) => child?.props?.children);
+	const child = childWrapper?.props?.children;
+
 	// Only wrap the topmost node with a slot
-	const wrappedChildren = nodeName ? h(Slot, null, children) : children;
+	const wrappedChildren = nodeName ? h(Slot, null, child) : children;
+
+	// If we are in development mode, we want to make sure that there is only one child in your liquid component
+	if (process.env.NODE_ENV === 'development' && nodeName) {
+		if (element.children.length > 1) {
+			throw new Error(
+				`Component ${element.localName} You must not have more than one child and root node of your preact component should be the same as your liquid root node.`
+			);
+		}
+	}
+
 	return h(nodeName || element.nodeName.toLowerCase(), props, wrappedChildren);
 }
